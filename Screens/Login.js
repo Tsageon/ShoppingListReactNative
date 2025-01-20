@@ -7,7 +7,7 @@ import { storeUserData, getUserData } from '../utils/authStorage';
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [, setError] = useState('');
   const navigation = useNavigation();
 
   const validateEmail = (email) => {
@@ -124,7 +124,7 @@ const LoginScreen = () => {
         onChangeText={setPassword}
       />
        <TouchableOpacity style={styles.button} onPress={handleLogin} >
-       <Text style={styles.buttonText}>Logout</Text></TouchableOpacity>
+       <Text style={styles.buttonText}>Login</Text></TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.link}>Don't have an account? Register</Text>
       </TouchableOpacity>

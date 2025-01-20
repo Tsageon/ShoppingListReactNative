@@ -1,5 +1,4 @@
 import React from 'react';
-import Toast from 'react-native-toast-message';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons'; 
@@ -12,7 +11,6 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-       <Toast />
       <Stack.Navigator initialRouteName="Login">
       <Stack.Screen
           name="Login"
