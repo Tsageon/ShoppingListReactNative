@@ -1,3 +1,4 @@
+
 # Shopping List App - React Native
 
 A feature-rich shopping list app built using **React Native**, designed to help users organize and manage their shopping items efficiently.
@@ -16,9 +17,9 @@ A feature-rich shopping list app built using **React Native**, designed to help 
 
 ## Tech Stack
 
-- **React Native**: Core framework for building the app.
+- **React Native**: Framework for building the app.
 - **React Navigation**: Handles app navigation.
-- **Redux** *(Optional)*: For state management (if applicable).
+- **Redux** *(Optional)*: For state management (wasn't for me).
 - **Ionicons**: Icon library for dynamic icons.
 
 ## Installation and Setup
@@ -31,7 +32,7 @@ A feature-rich shopping list app built using **React Native**, designed to help 
    - [Expo CLI](https://expo.dev/)
    - An emulator or physical device to run the app.
 
-#### Steps
+## Steps
 
 1. Clone the repository:
 

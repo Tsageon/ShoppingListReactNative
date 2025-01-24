@@ -1,9 +1,10 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons'; 
-import RegisterScreen from './Screens/Register';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-toast-message'; 
 import LoginScreen from './Screens/Login';
+import RegisterScreen from './Screens/Register';
 import ShoppingListScreen from './Screens/shoppingList';
 
 const Stack = createStackNavigator();
@@ -11,8 +12,9 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
+      <Toast/>
       <Stack.Navigator initialRouteName="Login">
-      <Stack.Screen
+        <Stack.Screen
           name="Login"
           component={LoginScreen}
           options={{
@@ -28,7 +30,6 @@ export default function App() {
             ),
           }}
         />
-
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
@@ -45,7 +46,6 @@ export default function App() {
             ),
           }}
         />
-
         <Stack.Screen
           name="ShoppingList"
           component={ShoppingListScreen}

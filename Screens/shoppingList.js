@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import Modal from 'react-native-modal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 import { Alert, View, ScrollView, FlatList, TextInput, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Modal from 'react-native-modal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addItem, removeItem, updateItem, setShoppingList, setLoading } from '../Redux/Action';
 import { getUserData } from '../utils/authStorage';
 
@@ -28,24 +29,33 @@ const ShoppingListScreen = () => {
     console.log('Current Shopping List from Redux:', shoppingList);
 
     const getQuantityIcon = (quantity) => {
+        if (typeof quantity !== 'number' || isNaN(quantity)) {
+            return []; 
+        }
+    
         const numIcons = Math.floor(quantity / 10);
         const iconArray = [];
-
+    
         for (let i = 0; i < numIcons; i++) {
             iconArray.push('cube');
         }
-
+    
         if (quantity === 1) {
             iconArray.push('gift');
         } else if (quantity < 10) {
             iconArray.push('cart');
         }
-
+    
         return iconArray;
     };
+    
 
 
     const getCategoryIcon = (category) => {
+        if (typeof category !== 'string' || !category) {
+            return 'home';
+        }
+    
         switch (category.toLowerCase()) {
             case 'food':
                 return 'fast-food';
@@ -74,25 +84,37 @@ const ShoppingListScreen = () => {
             case 'stationery':
                 return 'pen';
             default:
-                return 'home';
+                return 'home'; 
         }
     };
-
+    
     useEffect(() => {
         const loadItems = async () => {
             dispatch(setLoading(true));
             try {
                 const storedItems = await AsyncStorage.getItem('shoppingList');
                 console.log('Loaded Shopping List:', storedItems);
+               
                 if (storedItems) {
                     const parsedItems = JSON.parse(storedItems);
                     console.log('Parsed Items:', parsedItems);
                     dispatch(setShoppingList(parsedItems));
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Shopping List Loaded',
+                        text2: 'Your items have been successfully loaded.',
+                        position: 'top',
+                      });
                 } else {
                     Alert.alert('No items', 'It seems like your shopping list is empty.');
                 }
             } catch (error) {
-                console.error('Error loading items from AsyncStorage:', error);
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed to load shopping list. Please try again.',
+                    position: 'top',
+                  });
             } finally {
                 dispatch(setLoading(false));
             }
@@ -105,7 +127,12 @@ const ShoppingListScreen = () => {
         dispatch(setLoading(true));
         try {
             if (!itemName) {
-                Alert.alert('Error', 'Please enter an item name.');
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Please enter an item name.',
+                    position: 'top',
+                  });
                 return;
             }
 
@@ -125,7 +152,12 @@ const ShoppingListScreen = () => {
 
             const itemExists = currentList.some(item => item.name === newItem.name);
             if (itemExists) {
-                Alert.alert('Error', 'This item already exists in the list.');
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'This item already exists in the list.',
+                    position: 'top',
+                  });
                 return;
             }
 
@@ -141,10 +173,21 @@ const ShoppingListScreen = () => {
             setPrice('');
             setIsAddModalVisible(false);
 
-            Alert.alert('Item Added!', 'Your item has been added to the shopping list.');
+          
+    Toast.show({
+        type: 'success',
+        text1: 'Item Added',
+        text2: 'Your item has been successfully added to the shopping list.',
+        position: 'top',
+      });
         } catch (error) {
             console.error('Failed to add item:', error);
-            Alert.alert('Error', 'Something went wrong while adding the item.');
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong while adding the item. Please try again.',
+                position: 'top',
+              });
         } finally {
             dispatch(setLoading(false));
         }
@@ -154,7 +197,12 @@ const ShoppingListScreen = () => {
     const updateItemInList = async () => {
         try {
             if (!editedItemName || !editedQuantity || !editedPrice || !editedCategory) {
-                Alert.alert('Error', 'Please fill in all the fields.');
+             Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Please fill in all fields.',
+                position: 'top',
+             });
                 return;
             }
 
@@ -185,31 +233,58 @@ const ShoppingListScreen = () => {
             setEditedIndex(null);
             setIsEditModalVisible(false);
 
-            Alert.alert('Item Updated!', 'Your item has been updated.');
+         
+    Toast.show({
+        type: 'success',
+        text1: 'Item Updated',
+        text2: 'Your item has been successfully updated.',
+        position: 'top',
+      });
         } catch (error) {
             console.error('Failed to update item:', error);
-            Alert.alert('Error', 'Something went wrong while updating the item.');
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong while updating the item. Please try again.',
+                position: 'top',
+              });
         }
     };
 
     const togglePurchaseStatus = async (id) => {
         dispatch(setLoading(true));
         try {
-            const updatedList = shoppingList.map(item =>
-                item.id === id ? { ...item, purchased: !item.purchased } : item
-            );
-
-            await AsyncStorage.setItem('shoppingList', JSON.stringify(updatedList));
-            dispatch(setShoppingList(updatedList));
-
+          const updatedList = shoppingList.map(item =>
+            item.id === id ? { ...item, purchased: !item.purchased } : item
+          );
+      
+          await AsyncStorage.setItem('shoppingList', JSON.stringify(updatedList));
+          dispatch(setShoppingList(updatedList));
+      
+          const toggledItem = updatedList.find(item => item.id === id);
+          Toast.show({
+            type: toggledItem.purchased ? 'success' : 'info',
+            text1: toggledItem.purchased
+              ? 'Item Purchased!'
+              : 'Item Unmarked as Purchased',
+            text2: toggledItem.purchased
+              ? 'The item has been marked as purchased.'
+              : 'The item has been unmarked.',
+            position: 'top',
+          });
         } catch (error) {
-            console.error('Error toggling purchase status:', error);
-            Alert.alert('Error', 'Could not update purchase status.');
+          console.error('Error toggling purchase status:', error);
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not update purchase status. Please try again.',
+            position: 'top',
+          });
         } finally {
-            dispatch(setLoading(false));
+          dispatch(setLoading(false));
         }
-    };
-
+      };
+      
 
     if (isLoading) {
         return <ActivityIndicator size="small" color="gold" />;
@@ -232,10 +307,20 @@ const ShoppingListScreen = () => {
             await AsyncStorage.setItem('shoppingList', JSON.stringify(updatedList));
 
             dispatch(removeItem(id));
-            Alert.alert('Item Removed!', 'Your item has been removed from the shopping list.');
+            Toast.show({
+                type: 'success',
+                text1: 'Item Removed!',
+                text2: 'Your item has been successfully removed from the shopping list.',
+                position: 'top',
+              });
         } catch (error) {
             console.error('Failed to remove item:', error);
-            Alert.alert('Error', 'Something went wrong while removing the item.');
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong while removing the item. Please try again.',
+                position: 'top',
+              });
         } finally {
             dispatch(setLoading(false));
         }
@@ -245,38 +330,77 @@ const ShoppingListScreen = () => {
         try {
             await AsyncStorage.removeItem('userToken');
             await AsyncStorage.removeItem('shoppingList');
+            Toast.show({
+                type: 'success',
+                text1: 'Data Cleared!',
+                text2: 'Your user data has been successfully removed.',
+                position: 'top',
+              });
         } catch (error) {
             console.error('Error clearing user data:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong while clearing user data. Please try again.',
+                position: 'top',
+              });
         }
     };
 
 
     const handleLogout = async () => {
-        Alert.alert(
-            'Are you sure?',
-            'Do you really want to log out?',
-            [
-                { text: 'Cancel', style: 'cancel' },
+        Toast.show({
+          type: 'info',
+          text1: 'Logging Out...',
+          text2: 'Please wait while we log you out.',
+          position: 'top',
+        });
+      
+        try {
+          const confirmation = await new Promise((resolve, reject) => {
+            Alert.alert(
+              'Are you sure?',
+              'Do you really want to log out?',
+              [
+                { text: 'Cancel', style: 'cancel', onPress: () => reject('User canceled') },
                 {
-                    text: 'OK',
-                    onPress: async () => {
-                        try {
-                            await removeUserData();
-                            console.log('User data removed from AsyncStorage');
-
-                            const user = await getUserData();
-                            console.log('Retrieved user after removal:', user);
-
-                            navigation.replace('login');
-                        } catch (error) {
-                            console.error('Error during logout:', error);
-                        }
-                    },
+                  text: 'OK',
+                  onPress: () => resolve('User confirmed'),
                 },
-            ],
-            { cancelable: false }
-        );
-    };
+              ],
+              { cancelable: false }
+            );
+          });
+      
+          if (confirmation === 'User confirmed') {
+            await removeUserData();
+            console.log('User data removed from AsyncStorage');
+      
+            const user = await getUserData();
+            console.log('Retrieved user after removal:', user);
+      
+            Toast.show({
+              type: 'success',
+              text1: 'Logged Out!',
+              text2: 'You have been successfully logged out.',
+              position: 'top',
+            });
+      
+            navigation.replace('login');
+          }
+        } catch (error) {
+          console.error('Error during logout:', error);
+      
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Something went wrong during logout. Please try again.',
+            position: 'top',
+          });
+        }
+      };      
+
+      console.log(shoppingList);
 
     return (
         <View style={styles.container}>
@@ -287,11 +411,10 @@ const ShoppingListScreen = () => {
             )}
 
             {!isLoading && (
-                <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
-
+                <View style={ styles.modalParent }>
                     <Modal isVisible={isAddModalVisible}>
                         <View style={styles.modalContent}>
-                            <ScrollView contentContainerStyle={styles.modalContent}>
+                        <Text style={styles.modalHeading}>Add New Item</Text> 
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Item Name"
@@ -327,13 +450,12 @@ const ShoppingListScreen = () => {
                                 >
                                     <Text style={styles.buttonText}>Close</Text>
                                 </TouchableOpacity>
-                            </ScrollView>
                         </View>
                     </Modal>
 
                     <Modal isVisible={isEditModalVisible}>
                         <View style={styles.modalContent}>
-                            <ScrollView contentContainerStyle={styles.modalContent}>
+                        <Text style={styles.modalHeading}>Edit Item</Text> 
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Edit item name"
@@ -369,7 +491,6 @@ const ShoppingListScreen = () => {
                                 >
                                     <Text style={styles.buttonText}>Close</Text>
                                 </TouchableOpacity>
-                            </ScrollView>
                         </View>
                     </Modal>
 
@@ -381,16 +502,16 @@ const ShoppingListScreen = () => {
                     </TouchableOpacity>
 
                     <View style={styles.tableRow}>
-                        <View style={[styles.tableCell, { flex: 1 }]}>
+                        <View style={[styles.tableCell]}>
                             <Text>Name</Text>
                         </View>
-                        <View style={[styles.tableCell, { flex: 1 }]}>
+                        <View style={[styles.tableCell]}>
                             <Text>Quantity</Text>
                         </View>
-                        <View style={[styles.tableCell, { flex: 1 }]}>
+                        <View style={[styles.tableCell]}>
                             <Text>Category</Text>
                         </View>
-                        <View style={[styles.tableCell, { flex: 0.5, minWidth: 80 }]}>
+                        <View style={[styles.tableCell]}>
                             <Text>Price</Text>
                         </View>
                         <View style={[styles.tableCell, { flex: 1, justifyContent: 'flex-start', paddingLeft: 9 }]}>
@@ -403,25 +524,25 @@ const ShoppingListScreen = () => {
                         keyExtractor={(item) => item.id.toString()}
                         ListEmptyComponent={<Text>No items in the shopping list!</Text>}
                         renderItem={({ item }) => (
-                            <View style={[styles.itemContainer, item.purchased && styles.purchasedContainer]}>
+                            <View style={[styles.itemContainer, item.purchased]}>
                                 <View style={styles.tableCell}>
-                                    <Text style={[styles.itemText, item.purchased && styles.strikethrough]}>
-                                        {item.name}
+                                    <Text style={[styles.itemText, item.purchased ]}>
+                                        {item.name || "ExpoBS"}
                                     </Text>
                                 </View>
 
                                 <View style={styles.tableCell}>
                                     {getQuantityIcon(item.quantity).map((icon, index) => (
-                                        <Ionicons key={index} name={icon} size={20} color="red" />
+                                        <Ionicons key={index} name={icon} size={25} color="red" />
                                     ))}
                                     <Text>{item.quantity}</Text>
                                 </View>
                                 <View style={styles.tableCell}>
-                                    <Ionicons name={getCategoryIcon(item.category)} size={20} color="royalblue" />
+                                    <Ionicons name={getCategoryIcon(item.category)} size={25} color="gray" />
                                     <Text>{item.category}</Text>
                                 </View>
                                 <View style={styles.tableCell}>
-                                    <Ionicons name="pricetag" size={20} color="royalblue" />
+                                    <Ionicons name="pricetag" size={25} color="green" />
                                     <Text>
                                         R
                                         {typeof item.price === 'number' && !isNaN(item.price)
@@ -439,7 +560,7 @@ const ShoppingListScreen = () => {
                                         />
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={() => EditItem(item)}>
-                                        <Ionicons name="pencil" size={20} color="orange" />
+                                        <Ionicons name="pencil" size={25} color="orange" />
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={() => removeItemFromList(item.id)}>
                                         <Ionicons name="trash-bin" size={25} color="red" />
@@ -453,7 +574,7 @@ const ShoppingListScreen = () => {
                         <Ionicons name="log-out" size={25} color="whitesmoke" style={styles.icon} />
                         <Text style={styles.buttonText}>Logout</Text>
                     </TouchableOpacity>
-                </ScrollView>
+                </View>
             )}
         </View>
     );
@@ -462,115 +583,131 @@ const ShoppingListScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        padding: 20,
+        backgroundColor: 'white',
+        position: 'relative', 
     },
     loading: {
         flex: 1,
+        top: 50,
+        position: 'absolute',
         justifyContent: 'center',
         alignItems: 'center',
     },
+    modalHeading: {
+        fontSize: 24, 
+        fontWeight: 'bold',
+        marginBottom: 20,  
+        textAlign: 'center', 
+        color: 'black',
+    },
+    modalParent: {
+        position: 'relative',
+        width: '100%',  
+        height: '100%',
+    },
     modalContent: {
+        width: '100%',  
+        height:'100%',
         backgroundColor: 'white',
         borderRadius: 10,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
+        justifyContent:'center',
+        alignItems: 'center',
+        position: 'relative', 
+        zIndex: 999,
     },
     input: {
-        height: 40,
-        borderColor: '#ccc',
-        borderWidth: 1,
+        width: '100%',
+        padding: 10,
+        marginVertical: 10,
+        borderWidth: 3,
+        borderColor: '#ddd',
         borderRadius: 5,
-        marginBottom: 15,
-        paddingHorizontal: 10,
-        fontSize: 16,
+        backgroundColor: '#f9f9f9',
     },
     button: {
+        width: '100%',
+        paddingVertical: 12,
+        marginVertical: 10,
         backgroundColor: 'royalblue',
-        paddingVertical: 10,
         borderRadius: 5,
         alignItems: 'center',
-        marginBottom: 10,
     },
     buttonText: {
         color: 'white',
-        fontWeight: 'bold',
         fontSize: 16,
     },
     addButton: {
-        position: 'absolute',
-        bottom: 90,
-        right: 20,
+        position: 'relative',
+        alignItems:'center',
+        right: 0,
+        bottom: 10,  
         backgroundColor: 'gray',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderRadius: 50,
+        padding: 15,
         elevation: 5,
-        zIndex: 10,
     },
     tableRow: {
         flexDirection: 'row',
+        marginVertical: 10,
+        backgroundColor: 'whitesmoke',
+        paddingVertical: 5,
+        borderRadius: 5,
         alignItems: 'center',
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: 'royalblue',
-        marginBottom: 10,
-        backgroundColor: 'white',
-        borderRadius: 5
+        flexWrap: 'wrap', 
+        width: '100%'
     },
     tableCell: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 5,
-        fontWeight: 'bold',
-        borderBottomColor: 'royalblue',
-    },
-    itemContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'white',
         paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    purchasedContainer: {
-        backgroundColor: '#d4edda',
+        borderRightWidth: 1,
+        borderRightColor: '#ddd',
+        minWidth: 80,  
     },
     itemText: {
         fontSize: 16,
-        color: '#333',
-    },
-    strikethrough: {
-        textDecorationLine: 'line-through',
-        color: 'gray',
+        color: 'black',
     },
     iconContainer: {
         flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'space-around',
-        flex: 1,
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        gap:8,
+        width:'auto'
+    },
+    itemContainer: {
+        flexDirection: 'row',
+        flexWrap:'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+        padding: 10,
+        backgroundColor: 'whitesmoke',
+        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    purchasedContainer: {
+        backgroundColor: '#e0e0e0',
+    },
+    icon: {
+        marginRight: 10,
     },
     logoutButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'brown',
-        paddingVertical: 10,
-        marginTop: 20,
+        paddingVertical: 12,
+        backgroundColor: 'royalblue',
         borderRadius: 5,
-    },
-    icon: {
-        flexDirection: 'row',
-        marginRight: 10,
-        marginTop: 10
+        marginTop: 'auto',  
     },
 });
-``
+
+
 export default ShoppingListScreen;

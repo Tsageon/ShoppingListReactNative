@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Toast from 'react-native-toast-message';
-import { View, TextInput,  Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TextInput,  Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { storeUserData, getUserData } from '../utils/authStorage'; 
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [, setError] = useState('');
+  const [error, setError] = useState('');
   const navigation = useNavigation();
 
   const validateEmail = (email) => {
