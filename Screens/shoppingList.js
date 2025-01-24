@@ -386,7 +386,7 @@ const ShoppingListScreen = () => {
               position: 'top',
             });
       
-            navigation.replace('login');
+            navigation.replace('Login');
           }
         } catch (error) {
           console.error('Error during logout:', error);
